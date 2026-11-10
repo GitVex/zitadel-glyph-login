@@ -388,6 +388,11 @@
   opacity: 0.6;
   cursor: default;
 }
+/* the provider being opened stays clearly marked while the exit plays */
+.idp.idpBusy:disabled {
+  opacity: 0.85;
+  cursor: progress;
+}
 /* Google: light theme button (#fff / #747775 / #1f1f1f), dark theme (#131314 / #8e918f / #e3e3e3) */
 .google {
   color: #1f1f1f;

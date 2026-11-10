@@ -22,6 +22,7 @@ const PITCH_Y = 29;
 const Y0 = 142;
 const RITUAL = { perColumn: 1600, stagger: 420 };
 const MEDIUM = { perColumn: 700, stagger: 160 };
+const FAST = { perColumn: 450, stagger: 70 }; // ~1s, for leaving to GitHub/Google
 
 type Cell = {
   r: number;
@@ -399,14 +400,16 @@ export function GlyphStele() {
     };
 
     registerGlyphHandlers({
-      exit: async () => {
+      exit: async (speed) => {
         state = "exit";
         // if the redirect stays inside the login (next step), come back after a moment
         fallback = window.setTimeout(() => reenterRef.current?.(), 4500);
         pulse();
         cells.forEach((cell) => { cell.heat = 0; });
-        await scramble(BLANK, MEDIUM);
+        await scramble(BLANK, speed === "fast" ? FAST : MEDIUM);
       },
+
+      enter: () => reenterRef.current?.(),
 
       glitch: () => {
         flareEmblem();

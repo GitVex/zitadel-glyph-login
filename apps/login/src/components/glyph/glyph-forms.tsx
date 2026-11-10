@@ -7,9 +7,9 @@
  * differs (the mockup's plinth controls).
  */
 import { AutoSubmitForm } from "@/components/auto-submit-form";
-import { handleServerActionResponse } from "@/lib/client-utils";
+import { handleServerActionResponse, ServerActionResponse } from "@/lib/client-utils";
 import { idpTypeToSlug } from "@/lib/idp";
-import { redirectToIdp } from "@/lib/server/idp";
+import { getIdpRedirect } from "@/lib/server/idp";
 import { sendLoginname } from "@/lib/server/loginname";
 import { resetPassword, sendPassword } from "@/lib/server/password";
 import { create } from "@zitadel/client";
@@ -21,11 +21,17 @@ import {
 } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useActionState, useCallback, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { GlyphButton, GlyphField, GlyphLink, GlyphStatus } from "./glyph-controls";
-import { isErrorResponse, isRedirectResponse, playGlyphExit, playGlyphGlitch, playGlyphInscribe } from "./glyph-exit";
+import {
+  isErrorResponse,
+  isRedirectResponse,
+  playGlyphExit,
+  playGlyphGlitch,
+  playGlyphInscribe,
+  playGlyphReturn,
+} from "./glyph-exit";
 import ui from "./glyph-ui.module.css";
 
 type SamlData = { url: string; fields: Record<string, string> };
@@ -303,15 +309,19 @@ function GitHubMark() {
   );
 }
 
-function IdpButton({ idp }: { idp: IdentityProvider }) {
+function IdpButton({ idp, disabled, busy }: { idp: IdentityProvider; disabled: boolean; busy: boolean }) {
   const t = useTranslations("idp");
-  const { pending } = useFormStatus();
   const isGoogle = idp.type === IdentityProviderType.GOOGLE;
   const isGithub = idp.type === IdentityProviderType.GITHUB || idp.type === IdentityProviderType.GITHUB_ES;
   const label = isGoogle ? t("signInWithGoogle") : isGithub ? t("signInWithGithub") : idp.name;
 
   return (
-    <button type="submit" disabled={pending} className={`${ui.idp} ${isGoogle ? ui.google : ui.outlined}`}>
+    <button
+      type="submit"
+      disabled={disabled}
+      aria-busy={busy}
+      className={`${ui.idp} ${isGoogle ? ui.google : ui.outlined} ${busy ? ui.idpBusy : ""}`}
+    >
       {isGoogle ? <GoogleG /> : isGithub ? <GitHubMark /> : null}
       <span>{label}</span>
     </button>
@@ -346,29 +356,58 @@ export function GlyphIdpButtons({
   sessionId?: string;
   postErrorRedirectUrl?: string;
 }) {
-  const [state, action] = useActionState(redirectToIdp, {});
+  const router = useRouter();
+  const t = useTranslations("loginname");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [samlData, setSamlData] = useState<SamlData | null>(null);
 
-  useEffect(() => {
-    if (state?.error) playGlyphGlitch();
-  }, [state?.error]);
+  // Ask for the provider's address and play the (fast) exit at the same time; navigate
+  // only once both are done, so the scramble always finishes before GitHub/Google load.
+  async function startProvider(e: FormEvent<HTMLFormElement>, idpId: string) {
+    e.preventDefault();
+    if (pendingId) return;
+    const formData = new FormData(e.currentTarget);
+    setPendingId(idpId);
+    setError("");
+
+    const fail = (message: string) => {
+      playGlyphReturn();
+      playGlyphGlitch();
+      setError(message);
+      setPendingId(null);
+    };
+
+    try {
+      const [res] = await Promise.all([getIdpRedirect(formData), playGlyphExit("fast")]);
+      if (isErrorResponse(res)) {
+        fail((res as { error: string }).error);
+        return;
+      }
+      const handled = handleServerActionResponse(res as ServerActionResponse, router, setSamlData, (message) => fail(message));
+      if (!handled) fail(t("errors.couldNotStartIDPFlow"));
+    } catch {
+      fail(t("errors.couldNotStartIDPFlow"));
+    }
+  }
 
   return (
     <div className={ui.idps}>
-      {state?.samlData && <AutoSubmitForm url={state.samlData.url} fields={state.samlData.fields} />}
+      {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
       {identityProviders
         .filter((idp) => SUPPORTED_IDPS.has(idp.type))
         .map((idp, index) => (
-          <form action={action} onSubmit={() => void playGlyphExit()} className={ui.idpForm} key={`idp-${idp.id}-${index}`}>
+          <form onSubmit={(e) => startProvider(e, idp.id)} className={ui.idpForm} key={`idp-${idp.id}-${index}`}>
             <input type="hidden" name="id" value={idp.id} />
             <input type="hidden" name="provider" value={idpTypeToSlug(idp.type)} />
-            <input type="hidden" name="requestId" value={requestId} />
-            <input type="hidden" name="organization" value={organization} />
+            <input type="hidden" name="requestId" value={requestId ?? ""} />
+            <input type="hidden" name="organization" value={organization ?? ""} />
             {sessionId && <input type="hidden" name="sessionId" value={sessionId} />}
             {postErrorRedirectUrl && <input type="hidden" name="postErrorRedirectUrl" value={postErrorRedirectUrl} />}
-            <IdpButton idp={idp} />
+            <IdpButton idp={idp} disabled={!!pendingId} busy={pendingId === idp.id} />
           </form>
         ))}
-      {state?.error && <GlyphStatus error={state.error} />}
+      {error && <GlyphStatus error={error} />}
     </div>
   );
 }

@@ -5,8 +5,12 @@
  * glitch it on an error, and inscribe the entered login name into its top rows.
  * The stele registers its handlers; with no stele mounted every call resolves at once.
  */
+export type ExitSpeed = "normal" | "fast";
+
 type Handlers = {
-  exit: () => Promise<void>;
+  exit: (speed: ExitSpeed) => Promise<void>;
+  /** scramble back in after an exit that did not lead anywhere (e.g. a provider error) */
+  enter: () => void;
   glitch: () => void;
   inscribe: (text: string) => Promise<void>;
 };
@@ -17,12 +21,21 @@ export function registerGlyphHandlers(h: Handlers | null) {
   handlers = h;
 }
 
-/** Scramble the whole column away, before leaving the login. */
-export async function playGlyphExit(): Promise<void> {
+/** Scramble the whole column away, before leaving the login. "fast" is ~1s, used for GitHub/Google. */
+export async function playGlyphExit(speed: ExitSpeed = "normal"): Promise<void> {
   try {
-    await handlers?.exit();
+    await handlers?.exit(speed);
   } catch {
     /* animation problems must never block sign-in */
+  }
+}
+
+/** Bring the column back after an exit that was cancelled. */
+export function playGlyphReturn(): void {
+  try {
+    handlers?.enter();
+  } catch {
+    /* ignore */
   }
 }
 

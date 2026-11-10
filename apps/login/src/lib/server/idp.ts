@@ -23,7 +23,25 @@ export type RedirectToIdpState =
   | { error?: string | null; samlData?: { url: string; fields: Record<string, string> } }
   | undefined;
 
+export type IdpTarget = { redirect: string } | RedirectToIdpState;
+
 export async function redirectToIdp(prevState: RedirectToIdpState, formData: FormData): Promise<RedirectToIdpState> {
+  const target = await resolveIdpTarget(formData);
+  if (target && "redirect" in target && target.redirect) {
+    redirect(target.redirect);
+  }
+  return target as RedirectToIdpState;
+}
+
+/**
+ * Glyph login: same as redirectToIdp, but returns the target instead of redirecting,
+ * so the client can finish its exit animation before it navigates.
+ */
+export async function getIdpRedirect(formData: FormData): Promise<IdpTarget> {
+  return resolveIdpTarget(formData);
+}
+
+async function resolveIdpTarget(formData: FormData): Promise<IdpTarget> {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
   const host = getPublicHost(_headers);
@@ -64,7 +82,7 @@ export async function redirectToIdp(prevState: RedirectToIdpState, formData: For
   // redirect to LDAP page where username and password is requested
   if (provider === "ldap") {
     params.set("idpId", idpId);
-    redirect(`/idp/ldap?` + params.toString());
+    return { redirect: `/idp/ldap?` + params.toString() };
   }
 
   const response = await startIDPFlow({
@@ -84,7 +102,7 @@ export async function redirectToIdp(prevState: RedirectToIdpState, formData: For
   }
 
   if (response && "redirect" in response && response?.redirect) {
-    redirect(response.redirect);
+    return { redirect: response.redirect };
   }
 
   if (response && "samlData" in response && response?.samlData) {
