@@ -79,6 +79,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <BackgroundWrapper
                   className={`bg-background-light-600 dark:bg-background-dark-600 relative flex min-h-screen flex-col justify-center`}
                 >
+                  {/* Glyph: fixed header bar with the credit and the language/theme switchers */}
+                  <header className={`${glyph.tokens} ${glyph.header}`}>
+                    <div className={glyph.headerInner}>
+                      <GlyphCredit />
+                      <div className={glyph.switchers}>
+                        <LanguageSwitcher languages={languages} />
+                        <ThemeSwitch />
+                      </div>
+                    </div>
+                  </header>
                   {/* Glyph: stele beside the controls on wide screens, above them on phones */}
                   <div className={`${glyph.tokens} ${glyph.shell}`}>
                     <div className={glyph.steleCol}>
@@ -87,13 +97,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <div className={glyph.mainCol} data-glyph-controls>
                       {children}
                     </div>
-                    <footer className={glyph.footer}>
-                      <GlyphCredit />
-                      <div className={glyph.switchers}>
-                        <LanguageSwitcher languages={languages} />
-                        <ThemeSwitch />
-                      </div>
-                    </footer>
                   </div>
                   <GlyphScrollHint />
                 </BackgroundWrapper>

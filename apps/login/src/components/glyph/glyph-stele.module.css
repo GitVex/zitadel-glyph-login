@@ -22,7 +22,7 @@
 @media (min-width: 900px) {
   .stele .motif {
     width: auto;
-    height: min(calc(100vh - 64px), 760px);
+    height: min(calc(100vh - var(--g-header-h, 60px) - 72px), 760px);
     max-width: 100%;
   }
 }
@@ -69,7 +69,29 @@
   transition: opacity 350ms ease, transform 350ms ease;
 }
 .motif :global(.cell.holo) {
-  filter: drop-shadow(0 0 2px currentColor);
+  /* faint halo while scrambling (kept low so the column stays crisp) */
+  filter: drop-shadow(0 0 1px color-mix(in srgb, currentColor 35%, transparent));
+}
+
+/* error flare on the emblem */
+.motif :global(.flare) {
+  stroke: currentColor;
+  filter: drop-shadow(0 0 2.5px currentColor);
+}
+.motif :global(.flare-arc) {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.motif :global(.cooling) {
+  transition: color 0.7s ease, filter 0.7s ease;
+}
+.motif :global(.flares) {
+  transition: opacity 0.7s ease;
+}
+.motif :global(.flares.fading) {
+  opacity: 0;
 }
 
 .motif :global(.spin-a) {

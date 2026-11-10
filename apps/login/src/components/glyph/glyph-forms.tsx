@@ -25,7 +25,7 @@ import { useActionState, useCallback, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useForm } from "react-hook-form";
 import { GlyphButton, GlyphField, GlyphLink, GlyphStatus } from "./glyph-controls";
-import { isRedirectResponse, playGlyphExit } from "./glyph-exit";
+import { isErrorResponse, isRedirectResponse, playGlyphExit, playGlyphGlitch, playGlyphInscribe } from "./glyph-exit";
 import ui from "./glyph-ui.module.css";
 
 type SamlData = { url: string; fields: Record<string, string> };
@@ -69,7 +69,7 @@ export function GlyphUsernameForm({
   submit,
   allowRegister,
 }: UsernameProps) {
-  const { register, handleSubmit, formState, setFocus } = useForm<{ loginName: string }>({
+  const { register, handleSubmit, formState, setFocus, watch } = useForm<{ loginName: string }>({
     mode: "onChange",
     defaultValues: { loginName: loginName ?? "" },
   });
@@ -93,10 +93,13 @@ export function GlyphUsernameForm({
           suffix,
           ignoreUnknownUsernames: loginSettings?.ignoreUnknownUsernames,
         });
-        if (isRedirectResponse(res)) await playGlyphExit();
+        // the stele keeps the name: it scrambles into the top rows before the next step
+        if (isRedirectResponse(res)) await playGlyphInscribe(values.loginName);
+        if (isErrorResponse(res)) playGlyphGlitch();
         handleServerActionResponse(res, router, setSamlData, setError);
         return res;
       } catch {
+        playGlyphGlitch();
         setError(t("errors.internalError"));
       } finally {
         setLoading(false);
@@ -143,6 +146,7 @@ export function GlyphUsernameForm({
           autoCorrect="off"
           spellCheck={false}
           suffix={hideSuffix ? undefined : suffix}
+          echo={watch("loginName") ?? ""}
           data-testid="username-text-input"
           {...register("loginName", { required: t("required.loginName") })}
         />
@@ -204,8 +208,10 @@ export function GlyphPasswordForm({ loginSettings, loginName, organization, defa
         requestId,
       });
       if (isRedirectResponse(response)) await playGlyphExit();
+      if (isErrorResponse(response)) playGlyphGlitch();
       handleServerActionResponse(response, router, setSamlData, setError);
     } catch {
+      playGlyphGlitch();
       setError(t("verify.errors.couldNotVerifyPassword"));
     } finally {
       setLoading(false);
@@ -341,6 +347,10 @@ export function GlyphIdpButtons({
   postErrorRedirectUrl?: string;
 }) {
   const [state, action] = useActionState(redirectToIdp, {});
+
+  useEffect(() => {
+    if (state?.error) playGlyphGlitch();
+  }, [state?.error]);
 
   return (
     <div className={ui.idps}>
