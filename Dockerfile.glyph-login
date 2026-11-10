@@ -17,7 +17,8 @@ ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH} \
 
 COPY . .
 RUN pnpm install --frozen-lockfile --filter "@zitadel/zitadel" --filter "@zitadel/login..."
-RUN pnpm nx run @zitadel/proto:generate && pnpm nx run @zitadel/login:build
+RUN pnpm nx run @zitadel/proto:generate
+RUN pnpm nx run @zitadel/login:build
 
 # Runtime stage: mirrors apps/login/Dockerfile, with the health check on our base path.
 FROM node:24-alpine

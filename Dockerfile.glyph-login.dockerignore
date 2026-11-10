@@ -17,4 +17,3 @@
 !deploy/compose/package.json
 **/node_modules
 **/.next
-apps/login/.env*
