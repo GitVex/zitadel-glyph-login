@@ -1,0 +1,20 @@
+# Only what the login app build needs. Every workspace manifest stays in,
+# so the pnpm lockfile still matches (`--frozen-lockfile`).
+*
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!nx.json
+!project.json
+!buf.work.yaml
+!buf.gen.yaml
+!proto
+!packages
+!apps/*/package.json
+!apps/login
+!console/package.json
+!tests/*/package.json
+!deploy/compose/package.json
+**/node_modules
+**/.next
+apps/login/.env*

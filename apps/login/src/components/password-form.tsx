@@ -1,5 +1,6 @@
 "use client";
 
+import { isRedirectResponse, playGlyphExit } from "@/components/glyph/glyph-exit";
 import { handleServerActionResponse } from "@/lib/client-utils";
 import { resetPassword, sendPassword } from "@/lib/server/password";
 import { create } from "@zitadel/client";
@@ -59,6 +60,7 @@ export function PasswordForm({ loginSettings, loginName, organization, defaultOr
         requestId,
       });
 
+      if (isRedirectResponse(response)) await playGlyphExit();
       handleServerActionResponse(response, router, setSamlData, setError);
     } catch {
       setError(t("verify.errors.couldNotVerifyPassword"));

@@ -1,4 +1,5 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
+import { GlyphWord } from "@/components/glyph/glyph-stele";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { Translated } from "@/components/translated";
 import { UsernameForm } from "@/components/username-form";
@@ -57,6 +58,27 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       </div>
 
       <div className="w-full">
+        {/* Glyph: single sign-on first, then a divider, then the name field */}
+        {loginSettings?.allowExternalIdp && !!identityProviders?.length && (
+          <div className="w-full pb-2">
+            <SignInWithIdp
+              identityProviders={identityProviders}
+              requestId={requestId}
+              organization={organization}
+              postErrorRedirectUrl="/loginname"
+              showLabel={false}
+            ></SignInWithIdp>
+          </div>
+        )}
+
+        {loginSettings?.allowExternalIdp && !!identityProviders?.length && loginSettings?.allowLocalAuthentication && (
+          <div className="flex items-center gap-3 py-4" aria-hidden="true">
+            <span className="h-px flex-1 bg-current opacity-20"></span>
+            <GlyphWord word="-" height={8} />
+            <span className="h-px flex-1 bg-current opacity-20"></span>
+          </div>
+        )}
+
         {loginSettings?.allowLocalAuthentication && (
           <UsernameForm
             loginName={loginName}
@@ -71,17 +93,6 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           ></UsernameForm>
         )}
 
-        {loginSettings?.allowExternalIdp && !!identityProviders?.length && (
-          <div className="w-full pt-6 pb-4">
-            <SignInWithIdp
-              identityProviders={identityProviders}
-              requestId={requestId}
-              organization={organization}
-              postErrorRedirectUrl="/loginname"
-              showLabel={loginSettings?.allowLocalAuthentication}
-            ></SignInWithIdp>
-          </div>
-        )}
       </div>
     </DynamicTheme>
   );

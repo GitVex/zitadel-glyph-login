@@ -1,5 +1,6 @@
 "use client";
 
+import { playGlyphExit } from "@/components/glyph/glyph-exit";
 import { idpTypeToSlug } from "@/lib/idp";
 import { redirectToIdp } from "@/lib/server/idp";
 import { IdentityProvider, IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
@@ -55,7 +56,7 @@ export function SignInWithIdp({
 
     const Component = components[type];
     return Component ? (
-      <form action={action} className="flex" key={`idp-${index}`}>
+      <form action={action} onSubmit={() => void playGlyphExit()} className="flex" key={`idp-${index}`}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="provider" value={idpTypeToSlug(type)} />
         <input type="hidden" name="requestId" value={requestId} />

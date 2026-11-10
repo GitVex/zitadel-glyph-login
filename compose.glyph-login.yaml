@@ -1,0 +1,51 @@
+# Glyph stele login, deployed side by side with the stock Zitadel login.
+#
+# Coolify: + New Resource -> Git-based "Docker Compose" -> GitVex/zitadel-glyph-login,
+# branch custom-login, compose file compose.glyph-login.yaml, auto-deploy on push.
+# Do NOT set a domain on this service in Coolify: the Traefik labels below are
+# authoritative (same approach as GitVex/infrastructure/zitadel/compose.yaml).
+#
+# Nothing here touches the existing Zitadel stack: no database, no volumes.
+# The login talks to the existing instance over its public URL with its own
+# login-client PAT (machine user with the Instance Login Client role, IAM_LOGIN_CLIENT).
+#
+# Set in Coolify's environment for this resource:
+#   GLYPH_LOGIN_CLIENT_PAT   the PAT of the glyph-login-client machine user
+
+services:
+  glyph-login:
+    build:
+      context: .
+      dockerfile: Dockerfile.glyph-login
+      args:
+        NEXT_PUBLIC_BASE_PATH: /ui/glyph/login
+    restart: unless-stopped
+    environment:
+      # This stack is not on the Zitadel stack's network, so use the public URL.
+      ZITADEL_API_URL: https://auth.bardicinspiration.cc
+      ZITADEL_SERVICE_USER_TOKEN: ${GLYPH_LOGIN_CLIENT_PAT}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.glyph-login.loadbalancer.server.port=3000
+
+      - traefik.http.middlewares.glyph-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.glyph-https-redirect.redirectscheme.permanent=true
+
+      # Priority 200 beats the Zitadel API catch-all (100), like the stock login.
+      - traefik.http.routers.glyph-login-http.rule=Host(`auth.bardicinspiration.cc`) && PathPrefix(`/ui/glyph/login`)
+      - traefik.http.routers.glyph-login-http.entrypoints=http
+      - traefik.http.routers.glyph-login-http.middlewares=glyph-https-redirect
+      - traefik.http.routers.glyph-login-http.service=glyph-login
+      - traefik.http.routers.glyph-login-http.priority=200
+
+      - traefik.http.routers.glyph-login.rule=Host(`auth.bardicinspiration.cc`) && PathPrefix(`/ui/glyph/login`)
+      - traefik.http.routers.glyph-login.entrypoints=https
+      - traefik.http.routers.glyph-login.tls=true
+      - traefik.http.routers.glyph-login.tls.certresolver=letsencrypt
+      - traefik.http.routers.glyph-login.service=glyph-login
+      - traefik.http.routers.glyph-login.priority=200

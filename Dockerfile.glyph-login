@@ -1,0 +1,44 @@
+# Glyph stele login: Zitadel's Login V2 (apps/login) with the Glyph stele,
+# built from this monorepo fork in one Dockerfile so Coolify can build it on push.
+#
+# Build stage: install only the login app and its workspace dependencies,
+# generate the protobuf client, then build the standalone Next.js server.
+FROM node:20-bookworm-slim AS build
+WORKDIR /repo
+RUN corepack enable
+
+# NEXT_PUBLIC_* values are baked in at build time.
+ARG NEXT_PUBLIC_BASE_PATH=/ui/glyph/login
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH} \
+    NX_DAEMON=false \
+    NX_NO_CLOUD=true \
+    NEXT_TELEMETRY_DISABLED=1
+
+COPY . .
+RUN pnpm install --frozen-lockfile --filter "@zitadel/login..."
+RUN pnpm nx run @zitadel/proto:generate && pnpm nx run @zitadel/login:build
+
+# Runtime stage: mirrors apps/login/Dockerfile, with the health check on our base path.
+FROM node:24-alpine
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+RUN mkdir -p /.env-file && touch /.env-file/.env && chown -R nextjs:nodejs /.env-file
+
+COPY --from=build --chown=nextjs:nodejs /repo/apps/login/.next/standalone ./
+
+ARG NEXT_PUBLIC_BASE_PATH=/ui/glyph/login
+USER nextjs
+ENV HOSTNAME="::" \
+    PORT="3000" \
+    NODE_ENV="production" \
+    NODE_OPTIONS="--use-openssl-ca --require /app/load-ssl-cert-dir.cjs" \
+    SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt" \
+    ZITADEL_TLS_ENABLED="false" \
+    OTEL_SERVICE_NAME="zitadel-glyph-login" \
+    OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
+    GLYPH_HEALTH_PATH="${NEXT_PUBLIC_BASE_PATH}/ready"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD /usr/local/bin/node /app/healthcheck.mjs "$GLYPH_HEALTH_PATH"
+ENTRYPOINT ["/app/entrypoint.sh", "node", "apps/login/server.js"]

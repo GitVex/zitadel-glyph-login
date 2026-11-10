@@ -1,5 +1,6 @@
 "use client";
 
+import { isRedirectResponse, playGlyphExit } from "@/components/glyph/glyph-exit";
 import { handleServerActionResponse } from "@/lib/client-utils";
 import { sendLoginname } from "@/lib/server/loginname";
 import { LoginSettings } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
@@ -71,6 +72,7 @@ export function UsernameForm({
           ignoreUnknownUsernames: loginSettings?.ignoreUnknownUsernames,
         });
 
+        if (isRedirectResponse(res)) await playGlyphExit();
         handleServerActionResponse(res, router, setSamlData, setError);
         return res;
       } catch {
