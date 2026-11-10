@@ -293,7 +293,7 @@ export function GlyphWord({ word, height = 10 }: { word: string; height?: number
   const w = word.length * (s + gap) - gap + 2;
   return (
     <svg viewBox={`-1 -1 ${w} ${s + 2}`} height={height} aria-hidden="true" className={styles.word}>
-      {[...word].map((ch, i) => {
+      {word.split("").map((ch, i) => {
         const shape = glyphFor(ch);
         return (
           <g key={i} transform={`translate(${i * (s + gap)} 0)`}>
