@@ -192,7 +192,15 @@ export function GlyphStele() {
       if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
     };
 
-    const scramble = (text: string, speed: { perColumn: number; stagger: number }) => {
+    // phones (stele stacked above the controls): entry sweeps row by row, toward the form
+    const stacked = () => window.matchMedia("(max-width: 899px)").matches;
+    const ROW_SWEEP = { perColumn: 600, stagger: 70 };
+
+    const scramble = (
+      text: string,
+      speed: { perColumn: number; stagger: number },
+      order: "columns" | "rows" = "columns",
+    ) => {
       if (reduce) {
         cells.forEach((cell) => { cell.target = text[cell.r * COLS + cell.c]; cell.heat = 0; show(cell, cell.target); });
         return Promise.resolve();
@@ -200,18 +208,25 @@ export function GlyphStele() {
       const now = performance.now();
       for (const cell of cells) {
         cell.target = text[cell.r * COLS + cell.c];
-        cell.start = now + cell.c * speed.stagger + Math.random() * 80;
-        cell.end = cell.start + speed.perColumn * (0.35 + (0.65 * cell.r) / (ROWS - 1));
+        if (order === "rows") {
+          cell.start = now + cell.r * speed.stagger + cell.c * 12 + Math.random() * 40;
+          cell.end = cell.start + speed.perColumn * (0.35 + (0.65 * cell.c) / (COLS - 1));
+        } else {
+          cell.start = now + cell.c * speed.stagger + Math.random() * 80;
+          cell.end = cell.start + speed.perColumn * (0.35 + (0.65 * cell.r) / (ROWS - 1));
+        }
         cell.next = cell.start;
       }
       kick();
-      return wait((COLS - 1) * speed.stagger + speed.perColumn + 120);
+      const lanes = order === "rows" ? ROWS : COLS;
+      return wait((lanes - 1) * speed.stagger + speed.perColumn + COLS * 12 + 120);
     };
 
     let state: "gate" | "exit" = "gate";
     let busy = true;
     cells.forEach((cell) => show(cell, " "));
-    scramble(makeText(COLS * ROWS), MEDIUM).then(() => { busy = false; });
+    const enter = () => (stacked() ? scramble(makeText(COLS * ROWS), ROW_SWEEP, "rows") : scramble(makeText(COLS * ROWS), MEDIUM));
+    enter().then(() => { busy = false; });
 
     const timer = reduce
       ? 0
@@ -243,7 +258,7 @@ export function GlyphStele() {
       window.clearTimeout(fallback);
       state = "gate";
       busy = true;
-      scramble(makeText(COLS * ROWS), MEDIUM).then(() => { busy = false; });
+      enter().then(() => { busy = false; });
     };
 
     registerGlyphExit(async () => {

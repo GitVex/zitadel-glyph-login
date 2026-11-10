@@ -104,3 +104,21 @@ export function makeText(length: number): string {
   while (t.length < length) t += (t ? "--" : "") + sentence();
   return t.replace(/ /g, "-").slice(0, length);
 }
+
+/**
+ * Turn any (translated) label into text the glyph alphabet can draw:
+ * uppercase, German umlauts folded, everything else outside A–Z becomes a dash.
+ */
+export function toGlyphText(label: string, max = 12): string {
+  return label
+    .toUpperCase()
+    .replace(/Ä/g, "A")
+    .replace(/Ö/g, "O")
+    .replace(/Ü/g, "U")
+    .replace(/ß/g, "SS")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^A-Z]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, max);
+}

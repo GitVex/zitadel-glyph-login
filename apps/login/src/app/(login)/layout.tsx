@@ -1,7 +1,10 @@
 import "@/styles/globals.scss";
 
 import { BackgroundWrapper } from "@/components/background-wrapper";
+import { GlyphCredit } from "@/components/glyph/glyph-controls";
+import { GlyphScrollHint } from "@/components/glyph/glyph-scroll-hint";
 import { GlyphStele } from "@/components/glyph/glyph-stele";
+import glyph from "@/components/glyph/glyph-ui.module.css";
 import { LanguageProvider } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Skeleton } from "@/components/skeleton";
@@ -13,13 +16,20 @@ import { getAllowedLanguages } from "@/lib/zitadel";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Lato } from "next/font/google";
+import { IBM_Plex_Mono, Roboto } from "next/font/google";
 import { headers } from "next/headers";
 import React, { Suspense } from "react";
 
-const lato = Lato({
-  weight: ["400", "700", "900"],
+// Glyph: IBM Plex Mono for the whole login; Roboto only for the Google button (brand guidelines)
+const plexMono = IBM_Plex_Mono({
+  weight: ["300", "400", "500"],
   subsets: ["latin"],
+  variable: "--font-glyph-mono",
+});
+const roboto = Roboto({
+  weight: ["500"],
+  subsets: ["latin"],
+  variable: "--font-glyph-roboto",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -44,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html className={`${lato.className}`} suppressHydrationWarning>
+    <html className={`${plexMono.className} ${plexMono.variable} ${roboto.variable}`} suppressHydrationWarning>
       <head />
       <body>
         <ThemeProvider>
@@ -69,14 +79,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <BackgroundWrapper
                   className={`bg-background-light-600 dark:bg-background-dark-600 relative flex min-h-screen flex-col justify-center`}
                 >
-                  <div className="relative mx-auto w-full max-w-[1100px] py-8">
-                    <GlyphStele />
-                    <div>{children}</div>
-                    <div className="mx-auto flex max-w-[440px] flex-row items-center justify-end space-x-4 px-4 py-4 md:max-w-full md:px-8">
-                      <LanguageSwitcher languages={languages} />
-                      <ThemeSwitch />
+                  {/* Glyph: stele beside the controls on wide screens, above them on phones */}
+                  <div className={`${glyph.tokens} ${glyph.shell}`}>
+                    <div className={glyph.steleCol}>
+                      <GlyphStele />
                     </div>
+                    <div className={glyph.mainCol} data-glyph-controls>
+                      {children}
+                    </div>
+                    <footer className={glyph.footer}>
+                      <GlyphCredit />
+                      <div className={glyph.switchers}>
+                        <LanguageSwitcher languages={languages} />
+                        <ThemeSwitch />
+                      </div>
+                    </footer>
                   </div>
+                  <GlyphScrollHint />
                 </BackgroundWrapper>
               </LanguageProvider>
             </Suspense>

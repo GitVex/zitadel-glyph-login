@@ -68,21 +68,15 @@ type BrandingColors = {
   };
 };
 
-export function setTheme(document: any, policy?: BrandingSettings) {
-  const lP: BrandingColors = {
-    lightTheme: {
-      backgroundColor: policy?.lightTheme?.backgroundColor || BACKGROUND,
-      fontColor: policy?.lightTheme?.fontColor || TEXT,
-      primaryColor: policy?.lightTheme?.primaryColor || PRIMARY,
-      warnColor: policy?.lightTheme?.warnColor || WARN,
-    },
-    darkTheme: {
-      backgroundColor: policy?.darkTheme?.backgroundColor || DARK_BACKGROUND,
-      fontColor: policy?.darkTheme?.fontColor || DARK_TEXT,
-      primaryColor: policy?.darkTheme?.primaryColor || DARK_PRIMARY,
-      warnColor: policy?.darkTheme?.warnColor || DARK_WARN,
-    },
-  };
+// Glyph login: a fixed palette instead of the instance branding colours. The stock
+// login on the same instance reads the same branding, so the palette lives here.
+const GLYPH_COLORS: BrandingColors = {
+  lightTheme: { backgroundColor: "#f1f0eb", fontColor: "#0b0b0a", primaryColor: "#0b0b0a", warnColor: WARN },
+  darkTheme: { backgroundColor: "#000000", fontColor: "#ecebe6", primaryColor: "#ecebe6", warnColor: DARK_WARN },
+};
+
+export function setTheme(document: any, _policy?: BrandingSettings) {
+  const lP: BrandingColors = GLYPH_COLORS;
 
   const dark = computeMap(lP, true);
   const light = computeMap(lP, false);

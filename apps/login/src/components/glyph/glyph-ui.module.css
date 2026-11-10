@@ -1,0 +1,412 @@
+/*
+ * Glyph login UI: the mockup's "plinth" controls and the page shell.
+ * Light values first, dark under the login's `.dark` root class.
+ */
+.tokens {
+  --g-fg: #0b0b0a;
+  --g-dim: #64635e;
+  --g-faint: #cdcbc3;
+  --g-bg: #f1f0eb;
+  --g-warn: #b4232f;
+  --g-mono: var(--font-glyph-mono), "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+:global(.dark) .tokens {
+  --g-fg: #ecebe6;
+  --g-dim: #8a8984;
+  --g-faint: #2a2a28;
+  --g-bg: #000000;
+  --g-warn: #ff6b78;
+}
+
+/* ---------- page shell: stele beside the controls on wide screens ---------- */
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-block: 28px 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  color: var(--g-fg);
+  font-family: var(--g-mono);
+}
+.steleCol {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.mainCol {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+.footer {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--g-faint);
+}
+@media (min-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 48px;
+    min-height: calc(100vh - 40px);
+  }
+  .steleCol {
+    position: sticky;
+    top: 20px;
+    align-self: center;
+  }
+  .footer {
+    grid-column: 1 / -1;
+  }
+}
+
+/* language + theme switchers, quieted to thin outlines */
+.switchers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.switchers :global(button),
+.switchers :global(select) {
+  background: transparent !important;
+  border-color: var(--g-faint) !important;
+  box-shadow: none !important;
+  color: var(--g-fg) !important;
+}
+.switchers :global(button:focus-visible) {
+  outline: 1px solid var(--g-fg);
+  outline-offset: 2px;
+}
+
+/* ---------- plinth ---------- */
+.plinth {
+  width: min(320px, 100%);
+  display: grid;
+  gap: 16px;
+  color: var(--g-fg);
+  font-family: var(--g-mono);
+  font-weight: 300;
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--g-dim);
+  text-align: center;
+}
+.title::before,
+.title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--g-faint);
+}
+.who {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--g-dim);
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--g-faint);
+}
+
+/* ---------- fields ---------- */
+.form {
+  display: grid;
+  gap: 14px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--g-dim);
+}
+.inputRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: 1px solid var(--g-faint);
+  transition: border-color 0.2s;
+}
+.inputRow:focus-within {
+  border-bottom-color: var(--g-fg);
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--g-fg);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 6px 0;
+  outline: none;
+  box-shadow: none;
+}
+.suffix {
+  font-size: 13px;
+  color: var(--g-dim);
+}
+
+/* ---------- buttons ---------- */
+.button {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--g-fg);
+  background: transparent;
+  border: 1px solid var(--g-fg);
+  border-radius: 0;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.button:hover:not(:disabled) {
+  background: var(--g-fg);
+  color: var(--g-bg);
+}
+.button:focus-visible {
+  outline: 1px solid var(--g-fg);
+  outline-offset: 3px;
+}
+.button:disabled {
+  cursor: default;
+  border-color: var(--g-faint);
+  color: var(--g-dim);
+}
+.spinner {
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: glyph-spin 0.8s linear infinite;
+}
+@keyframes glyph-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.link {
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--g-dim);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--g-faint);
+  padding: 4px 0;
+  cursor: pointer;
+}
+.link:hover,
+.link:focus-visible {
+  color: var(--g-fg);
+  border-bottom-color: var(--g-fg);
+  outline: none;
+}
+
+.status {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--g-dim);
+}
+.statusError {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--g-warn);
+}
+
+/* ---------- identity providers (brand-compliant) ---------- */
+.idps {
+  display: grid;
+  gap: 10px;
+}
+.idpForm {
+  display: flex;
+}
+.idp {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-family: var(--font-glyph-roboto), Roboto, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.idp svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.idp:focus-visible {
+  outline: 1px solid var(--g-fg);
+  outline-offset: 3px;
+}
+.idp:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+/* Google: light theme button (#fff / #747775 / #1f1f1f), dark theme (#131314 / #8e918f / #e3e3e3) */
+.google {
+  color: #1f1f1f;
+  background: #ffffff;
+  border: 1px solid #747775;
+}
+.google:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+:global(.dark) .google {
+  color: #e3e3e3;
+  background: #131314;
+  border-color: #8e918f;
+}
+:global(.dark) .google:hover:not(:disabled) {
+  background: #1f1f20;
+}
+/* GitHub and others: the mark in the text colour, outlined */
+.outlined {
+  color: var(--g-fg);
+  background: transparent;
+  border: 1px solid var(--g-dim);
+}
+.outlined:hover:not(:disabled) {
+  border-color: var(--g-fg);
+}
+
+/* ---------- credit ---------- */
+.credit {
+  margin: 0;
+  max-width: 34em;
+  font-size: 10.5px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: var(--g-dim);
+}
+.credit a {
+  color: var(--g-fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--g-faint);
+}
+.credit a:hover,
+.credit a:focus-visible {
+  border-bottom-color: var(--g-fg);
+  outline: none;
+}
+.credit em {
+  font-style: normal;
+  color: var(--g-fg);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ---------- phone scroll hint ---------- */
+.scrollHint {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: 22px;
+  height: 14px;
+  color: var(--g-fg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  z-index: 5;
+}
+.scrollHintOn {
+  opacity: 0.35;
+  animation: glyph-hint 2.4s ease-in-out infinite;
+}
+@keyframes glyph-hint {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate(-50%, 0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translate(-50%, 2px);
+  }
+}
+@media (min-width: 900px) {
+  .scrollHint {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scrollHintOn {
+    animation: none;
+  }
+  .spinner {
+    animation: none;
+  }
+}

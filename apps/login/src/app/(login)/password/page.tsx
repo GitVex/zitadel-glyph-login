@@ -1,8 +1,8 @@
-import { Alert } from "@/components/alert";
-import { DynamicTheme } from "@/components/dynamic-theme";
-import { PasswordForm } from "@/components/password-form";
+import { GlyphPlinth } from "@/components/glyph/glyph-controls";
+import { GlyphPasswordForm } from "@/components/glyph/glyph-forms";
+import ui from "@/components/glyph/glyph-ui.module.css";
+import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
-import { UserAvatar } from "@/components/user-avatar";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import { getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
@@ -56,40 +56,22 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     organization: organization ?? sessionFactors?.factors?.user?.organizationId ?? defaultOrganization,
   });
 
+  const who = sessionFactors?.factors?.user?.displayName || loginName || sessionFactors?.factors?.user?.loginName;
+
   return (
-    <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-4">
-        <h1>
-          <Translated i18nKey="verify.title" namespace="password" />
-        </h1>
-        <p className="ztdl-p">
-          <Translated i18nKey="verify.description" namespace="password" />
-        </p>
+    <ThemeWrapper branding={branding}>
+      <GlyphPlinth title={<Translated i18nKey="verify.title" namespace="password" />}>
+        {who && <p className={ui.who}>{who}</p>}
 
-        {sessionFactors ? (
-          <UserAvatar
-            loginName={loginName ?? sessionFactors.factors?.user?.loginName}
-            displayName={sessionFactors.factors?.user?.displayName}
-            showDropdown
-            searchParams={searchParams}
-          ></UserAvatar>
-        ) : loginName ? (
-          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams}></UserAvatar>
-        ) : null}
-      </div>
-
-      <div className="w-full">
         {/* show error only if usernames should be shown to be unknown */}
         {(!sessionFactors || !loginName) && !loginSettings?.ignoreUnknownUsernames && (
-          <div className="py-4">
-            <Alert>
-              <Translated i18nKey="unknownContext" namespace="error" />
-            </Alert>
-          </div>
+          <p className={ui.statusError} role="alert">
+            <Translated i18nKey="unknownContext" namespace="error" />
+          </p>
         )}
 
         {loginName && (
-          <PasswordForm
+          <GlyphPasswordForm
             loginName={loginName}
             requestId={requestId}
             organization={organization} // stick to "organization" as we still want to do user discovery based on the searchParams not the default organization, later the organization is determined by the found user
@@ -97,7 +79,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             loginSettings={loginSettings}
           />
         )}
-      </div>
-    </DynamicTheme>
+      </GlyphPlinth>
+    </ThemeWrapper>
   );
 }

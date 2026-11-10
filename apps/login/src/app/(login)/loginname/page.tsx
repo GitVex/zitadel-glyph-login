@@ -1,8 +1,7 @@
-import { DynamicTheme } from "@/components/dynamic-theme";
-import { GlyphWord } from "@/components/glyph/glyph-stele";
-import { SignInWithIdp } from "@/components/sign-in-with-idp";
+import { GlyphDivider, GlyphPlinth } from "@/components/glyph/glyph-controls";
+import { GlyphIdpButtons, GlyphUsernameForm } from "@/components/glyph/glyph-forms";
+import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
-import { UsernameForm } from "@/components/username-form";
 import { getServiceConfig } from "@/lib/service-url";
 import { getActiveIdentityProviders, getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
@@ -46,41 +45,25 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
 
+  const showIdps = loginSettings?.allowExternalIdp && !!identityProviders?.length;
+
   return (
-    <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-4">
-        <h1>
-          <Translated i18nKey="title" namespace="loginname" />
-        </h1>
-        <p className="ztdl-p">
-          <Translated i18nKey="description" namespace="loginname" />
-        </p>
-      </div>
-
-      <div className="w-full">
+    <ThemeWrapper branding={branding}>
+      <GlyphPlinth title={<Translated i18nKey="title" namespace="loginname" />}>
         {/* Glyph: single sign-on first, then a divider, then the name field */}
-        {loginSettings?.allowExternalIdp && !!identityProviders?.length && (
-          <div className="w-full pb-2">
-            <SignInWithIdp
-              identityProviders={identityProviders}
-              requestId={requestId}
-              organization={organization}
-              postErrorRedirectUrl="/loginname"
-              showLabel={false}
-            ></SignInWithIdp>
-          </div>
+        {showIdps && (
+          <GlyphIdpButtons
+            identityProviders={identityProviders ?? []}
+            requestId={requestId}
+            organization={organization}
+            postErrorRedirectUrl="/loginname"
+          />
         )}
 
-        {loginSettings?.allowExternalIdp && !!identityProviders?.length && loginSettings?.allowLocalAuthentication && (
-          <div className="flex items-center gap-3 py-4" aria-hidden="true">
-            <span className="h-px flex-1 bg-current opacity-20"></span>
-            <GlyphWord word="-" height={8} />
-            <span className="h-px flex-1 bg-current opacity-20"></span>
-          </div>
-        )}
+        {showIdps && loginSettings?.allowLocalAuthentication && <GlyphDivider />}
 
         {loginSettings?.allowLocalAuthentication && (
-          <UsernameForm
+          <GlyphUsernameForm
             loginName={loginName}
             requestId={requestId}
             organization={organization} // stick to "organization" as we still want to do user discovery based on the searchParams not the default organization, later the organization is determined by the found user
@@ -90,10 +73,9 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             hideSuffix={branding?.hideLoginNameSuffix}
             submit={submit}
             allowRegister={!!loginSettings?.allowRegister}
-          ></UsernameForm>
+          />
         )}
-
-      </div>
-    </DynamicTheme>
+      </GlyphPlinth>
+    </ThemeWrapper>
   );
 }

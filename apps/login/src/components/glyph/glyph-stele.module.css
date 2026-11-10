@@ -18,6 +18,14 @@
   overflow: visible;
   touch-action: pan-y;
 }
+/* beside the controls: fit the whole stele in the viewport height */
+@media (min-width: 900px) {
+  .stele .motif {
+    width: auto;
+    height: min(calc(100vh - 64px), 760px);
+    max-width: 100%;
+  }
+}
 
 .word {
   display: inline-block;
