@@ -393,6 +393,15 @@ export function GlyphStele() {
     };
     document.addEventListener("input", onInput);
 
+    // Back from GitHub/Google (or the app): the browser may restore this page from its
+    // back/forward cache exactly as it was left, with the column scrambled away.
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      window.clearTimeout(fallback);
+      reenterRef.current?.();
+    };
+    window.addEventListener("pageshow", onPageShow);
+
     const pulse = () => {
       core.classList.remove("pulse");
       void core.getBBox();
@@ -465,6 +474,7 @@ export function GlyphStele() {
       svg.removeEventListener("pointermove", onMove);
       window.clearTimeout(fallback);
       document.removeEventListener("input", onInput);
+      window.removeEventListener("pageshow", onPageShow);
       cancelAnimationFrame(glowRaf);
       window.clearTimeout(flareTimer);
       document.removeEventListener("focusin", onFocusIn);

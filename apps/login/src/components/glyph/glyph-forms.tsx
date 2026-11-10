@@ -362,6 +362,15 @@ export function GlyphIdpButtons({
   const [error, setError] = useState("");
   const [samlData, setSamlData] = useState<SamlData | null>(null);
 
+  // Restored from the back/forward cache (Back from GitHub/Google): unlock the buttons again.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setPendingId(null);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   // Ask for the provider's address and play the (fast) exit at the same time; navigate
   // only once both are done, so the scramble always finishes before GitHub/Google load.
   async function startProvider(e: FormEvent<HTMLFormElement>, idpId: string) {
