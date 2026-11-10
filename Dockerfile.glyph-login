@@ -6,6 +6,10 @@
 # The workspace root (@zitadel/zitadel) is included because it provides nx and buf.
 FROM node:20-bookworm-slim AS build
 WORKDIR /repo
+# The slim image has no CA bundle; buf (a Go binary) needs it to fetch proto
+# dependencies from buf.build over HTTPS. Node ships its own, so pnpm worked without it.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 
 # NEXT_PUBLIC_* values are baked in at build time.
