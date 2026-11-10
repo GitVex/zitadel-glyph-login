@@ -3,6 +3,7 @@
 #
 # Build stage: install only the login app and its workspace dependencies,
 # generate the protobuf client, then build the standalone Next.js server.
+# The workspace root (@zitadel/zitadel) is included because it provides nx and buf.
 FROM node:20-bookworm-slim AS build
 WORKDIR /repo
 RUN corepack enable
@@ -15,7 +16,7 @@ ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH} \
     NEXT_TELEMETRY_DISABLED=1
 
 COPY . .
-RUN pnpm install --frozen-lockfile --filter "@zitadel/login..."
+RUN pnpm install --frozen-lockfile --filter "@zitadel/zitadel" --filter "@zitadel/login..."
 RUN pnpm nx run @zitadel/proto:generate && pnpm nx run @zitadel/login:build
 
 # Runtime stage: mirrors apps/login/Dockerfile, with the health check on our base path.
